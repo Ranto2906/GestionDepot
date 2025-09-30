@@ -28,7 +28,7 @@ public class DepotServiceBean implements DepotService {
     @PersistenceContext(unitName = "PostgresDS")
     private EntityManager em;
 
-    @Resource(lookup = "java:/PostgresDS")
+    @Resource(lookup = "java:jboss/datasources/PostgresDS")
     private DataSource ds; // Changé de jakarta.activation.DataSource à jakarta.sql.DataSource
 
     @PostConstruct
