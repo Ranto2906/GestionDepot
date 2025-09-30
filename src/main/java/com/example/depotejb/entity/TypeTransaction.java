@@ -3,17 +3,17 @@ package com.example.depotejb.entity;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "TypeTransactions")
+@Table(name = "\"TypeTransactions\"")
 public class TypeTransaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "IdTypeTransaction")
+    @Column(name = "\"IdTypeTransaction\"")
     private int idTypeTransaction;
 
-    @Column(name = "Code", nullable = false)
+    @Column(name = "\"Code\"", nullable = false)
     private String code;
 
-    @Column(name = "Description", nullable = false)
+    @Column(name = "\"Description\"", nullable = false)
     private String description;
 
     // Constructeurs

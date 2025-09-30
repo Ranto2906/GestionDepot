@@ -5,30 +5,30 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "Transactions")
+@Table(name = "\"Transactions\"")
 public class Transaction {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "IdTransaction")
+    @Column(name = "\"IdTransaction\"")
     private int idTransaction;
 
-    @Column(name = "Montant", nullable = false)
+    @Column(name = "\"Montant\"", nullable = false)
     private BigDecimal montant;
 
-    @Column(name = "Reference", nullable = false)
+    @Column(name = "\"Reference\"", nullable = false)
     private String reference;
 
-    @Column(name = "DateTransaction", nullable = false)
+    @Column(name = "\"DateTransaction\"", nullable = false)
     private OffsetDateTime dateTransaction;
 
-    @Column(name = "UpdatedAt")
+    @Column(name = "\"UpdatedAt\"")
     private OffsetDateTime updatedAt;
 
-    @Column(name = "IdTypeStatus", nullable = false)
+    @Column(name = "\"IdTypeStatus\"", nullable = false)
     private int idTypeStatus;
 
     @ManyToOne
-    @JoinColumn(name = "IdTypeTransaction", nullable = false)
+    @JoinColumn(name = "\"IdTypeTransaction\"", nullable = false)
     private TypeTransaction typeTransaction;
 
     // Constructeurs
