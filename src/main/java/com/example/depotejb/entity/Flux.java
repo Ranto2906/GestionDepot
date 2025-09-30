@@ -5,27 +5,27 @@ import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 
 @Entity
-@Table(name = "Flux")
+@Table(name = "\"Flux\"")
 public class Flux {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "IdFlux")
+    @Column(name = "\"IdFlux\"")
     private int idFlux;
 
-    @Column(name = "Sens", nullable = false)
+    @Column(name = "\"Sens\"", nullable = false)
     private String sens;
 
-    @Column(name = "Montant", nullable = false)
+    @Column(name = "\"Montant\"", nullable = false)
     private BigDecimal montant;
 
-    @Column(name = "CreatedAt", nullable = false)
+    @Column(name = "\"CreatedAt\"", nullable = false)
     private OffsetDateTime createdAt;
 
-    @Column(name = "IdCompte", nullable = false)
+    @Column(name = "\"IdCompte\"", nullable = false)
     private int idCompte;
 
     @ManyToOne
-    @JoinColumn(name = "IdTransaction", nullable = false)
+    @JoinColumn(name = "\"IdTransaction\"", nullable = false)
     private Transaction transaction;
 
     // Constructeurs
