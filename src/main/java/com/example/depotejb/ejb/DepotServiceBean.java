@@ -1,3 +1,4 @@
+// src/main/java/com/example/depotejb/ejb/DepotServiceBean.java
 package com.example.depotejb.ejb;
 
 import com.example.depotejb.entity.Flux;
@@ -10,12 +11,13 @@ import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import javax.sql.DataSource;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+//import javax.sql.DataSource;
+
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -24,12 +26,12 @@ import java.time.OffsetDateTime;
 import java.time.ZoneId;
 
 @Stateless
-public class DepotServiceBean implements DepotService {
+public class DepotServiceBean implements DepotServiceRemote {
     @PersistenceContext(unitName = "PostgresDS")
     private EntityManager em;
 
     @Resource(lookup = "java:jboss/datasources/PostgresDS")
-    private DataSource ds; // Changé de jakarta.activation.DataSource à jakarta.sql.DataSource
+    private javax.sql.DataSource ds;
 
     @PostConstruct
     public void init() {
@@ -43,12 +45,10 @@ public class DepotServiceBean implements DepotService {
     @TransactionAttribute(TransactionAttributeType.REQUIRED)
     @Override
     public void effectuerDepot(int idCompte, BigDecimal montant, String reference) {
-        // Validation
         if (montant == null || montant.compareTo(BigDecimal.ZERO) <= 0) {
             throw new IllegalArgumentException("Le montant doit être positif.");
         }
 
-        // Obtenir ou créer le type de transaction "Dépôt"
         TypeTransaction typeTransaction = em.createQuery(
                         "SELECT t FROM TypeTransaction t WHERE t.code = :code", TypeTransaction.class)
                 .setParameter("code", "DEPOT")
@@ -58,25 +58,22 @@ public class DepotServiceBean implements DepotService {
             em.persist(typeTransaction);
         }
 
-        // Créer une transaction
         Transaction transaction = new Transaction();
         transaction.setMontant(montant);
         transaction.setReference(reference);
-        transaction.setDateTransaction(OffsetDateTime.now(ZoneId.of("Africa/Nairobi"))); // 12:30 PM EAT, 30/09/2025
-        transaction.setIdTypeStatus(1); // Supposons 1 = "ACTIF", à rendre dynamique si possible
+        transaction.setDateTransaction(OffsetDateTime.now(ZoneId.of("Africa/Nairobi")));
+        transaction.setIdTypeStatus(1);
         transaction.setTypeTransaction(typeTransaction);
         em.persist(transaction);
 
-        // Créer un flux
         Flux flux = new Flux();
         flux.setSens("crédit");
         flux.setMontant(montant);
-        flux.setCreatedAt(OffsetDateTime.now(ZoneId.of("Africa/Nairobi"))); // 12:30 PM EAT
+        flux.setCreatedAt(OffsetDateTime.now(ZoneId.of("Africa/Nairobi")));
         flux.setIdCompte(idCompte);
         flux.setTransaction(transaction);
         em.persist(flux);
 
-        // Appeler le Web Service C# pour mettre à jour le solde dans ComptesDB
         try (CloseableHttpClient client = HttpClients.createDefault()) {
             HttpPost post = new HttpPost("http://localhost:5082/api/comptes/" + idCompte + "/depot");
             post.setHeader("Content-Type", "application/json");
