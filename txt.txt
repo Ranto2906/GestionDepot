@@ -1,0 +1,3 @@
+je fais un projet pour une petit application de banque ,
+donc nous avons 2 EJB gestion depot et gestionpret
+un web service dans service compte et nous allons les assembler dans centralebancaire ,et ajouter un front
