@@ -1,9 +1,11 @@
-// src/main/java/com/example/depotejb/ejb/DepotServiceBean.java
 package com.example.depotejb.ejb;
 
 import com.example.depotejb.entity.Flux;
 import com.example.depotejb.entity.Transaction;
 import com.example.depotejb.entity.TypeTransaction;
+import com.example.depotejb.ejb.dao.FluxDao;
+import com.example.depotejb.ejb.dao.TransactionDao;
+import com.example.depotejb.ejb.dao.TypeTransactionDao;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import jakarta.ejb.Stateless;
@@ -11,13 +13,7 @@ import jakarta.ejb.TransactionAttribute;
 import jakarta.ejb.TransactionAttributeType;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import org.apache.http.client.methods.CloseableHttpResponse;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-//import javax.sql.DataSource;
-
+import javax.sql.DataSource;
 
 import java.math.BigDecimal;
 import java.sql.Connection;
@@ -31,12 +27,19 @@ public class DepotServiceBean implements DepotServiceRemote {
     private EntityManager em;
 
     @Resource(lookup = "java:jboss/datasources/PostgresDS")
-    private javax.sql.DataSource ds;
+    private DataSource ds;
+
+    private TransactionDao transactionDao;
+    private FluxDao fluxDao;
+    private TypeTransactionDao typeTransactionDao;
 
     @PostConstruct
     public void init() {
         try (Connection conn = ds.getConnection()) {
             System.out.println("Connexion réussie à PostgresDS");
+            transactionDao = new TransactionDao(em);
+            fluxDao = new FluxDao(em);
+            typeTransactionDao = new TypeTransactionDao(em);
         } catch (SQLException e) {
             System.err.println("Erreur de connexion à PostgresDS: " + e.getMessage());
         }
@@ -49,22 +52,19 @@ public class DepotServiceBean implements DepotServiceRemote {
             throw new IllegalArgumentException("Le montant doit être positif.");
         }
 
-        TypeTransaction typeTransaction = em.createQuery(
-                        "SELECT t FROM TypeTransaction t WHERE t.code = :code", TypeTransaction.class)
-                .setParameter("code", "DEPOT")
-                .getSingleResult();
+        TypeTransaction typeTransaction = typeTransactionDao.findByCode("DEPOT");
         if (typeTransaction == null) {
             typeTransaction = new TypeTransaction("DEPOT", "Dépôt en compte");
-            em.persist(typeTransaction);
+            typeTransactionDao.save(typeTransaction);
         }
 
         Transaction transaction = new Transaction();
         transaction.setMontant(montant);
         transaction.setReference(reference);
         transaction.setDateTransaction(OffsetDateTime.now(ZoneId.of("Africa/Nairobi")));
-        transaction.setIdTypeStatus(1);
+        transaction.setIdTypeStatus(1); // À rendre dynamique si possible
         transaction.setTypeTransaction(typeTransaction);
-        em.persist(transaction);
+        transactionDao.save(transaction);
 
         Flux flux = new Flux();
         flux.setSens("crédit");
@@ -72,20 +72,6 @@ public class DepotServiceBean implements DepotServiceRemote {
         flux.setCreatedAt(OffsetDateTime.now(ZoneId.of("Africa/Nairobi")));
         flux.setIdCompte(idCompte);
         flux.setTransaction(transaction);
-        em.persist(flux);
-
-        try (CloseableHttpClient client = HttpClients.createDefault()) {
-            HttpPost post = new HttpPost("http://localhost:5082/api/comptes/" + idCompte + "/depot");
-            post.setHeader("Content-Type", "application/json");
-            String jsonPayload = "{\"montant\": " + montant.toString() + "}";
-            post.setEntity(new StringEntity(jsonPayload));
-            try (CloseableHttpResponse response = client.execute(post)) {
-                if (response.getStatusLine().getStatusCode() != 200) {
-                    throw new RuntimeException("Échec de l'appel au Web Service C#: " + response.getStatusLine());
-                }
-            }
-        } catch (Exception e) {
-            throw new RuntimeException("Erreur lors de l'appel au Web Service C#", e);
-        }
+        fluxDao.save(flux);
     }
 }
