@@ -9,12 +9,9 @@ import com.example.depotejb.ejb.dao.TypeTransactionDao;
 import jakarta.annotation.PostConstruct;
 import jakarta.annotation.Resource;
 import jakarta.ejb.Stateless;
-import jakarta.ejb.TransactionAttribute;
-import jakarta.ejb.TransactionAttributeType;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import javax.sql.DataSource;
-
 import java.math.BigDecimal;
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -45,7 +42,6 @@ public class DepotServiceBean implements DepotServiceRemote {
         }
     }
 
-    @TransactionAttribute(TransactionAttributeType.REQUIRED)
     @Override
     public void effectuerDepot(int idCompte, BigDecimal montant, String reference) {
         if (montant == null || montant.compareTo(BigDecimal.ZERO) <= 0) {
