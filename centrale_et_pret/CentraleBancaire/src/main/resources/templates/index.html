@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Centrale Bancaire</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 24px; }
+        form { margin-bottom: 24px; padding: 16px; border: 1px solid #ddd; border-radius: 8px; }
+        label { display: block; margin-bottom: 8px; }
+        input { padding: 6px 10px; margin-right: 8px; }
+        button { padding: 6px 12px; }
+    </style>
+    <script>
+        async function submitForm(event, url, toJson=false) {
+            event.preventDefault();
+            const form = event.target;
+            const data = new FormData(form);
+            const params = new URLSearchParams();
+            data.forEach((v, k) => params.append(k, v));
+            const endpoint = toJson ? url : (url + '?' + params.toString());
+            const resp = await fetch(endpoint, {
+                method: 'POST',
+                headers: toJson ? { 'Content-Type': 'application/json' } : undefined,
+                body: toJson ? JSON.stringify(Object.fromEntries(data)) : undefined
+            });
+            const text = await resp.text();
+            document.getElementById('result').textContent = text;
+        }
+    </script>
+    </head>
+<body>
+<h1>Centrale Bancaire</h1>
+
+<h2>Dépôt (EJB GestionDepot)</h2>
+<form onsubmit="submitForm(event, '/api/depot')">
+    <label>Id Compte <input name="idCompte" type="number" required></label>
+    <label>Montant <input name="montant" type="number" step="0.01" required></label>
+    <label>Référence <input name="reference" type="text" required></label>
+    <button type="submit">Effectuer dépôt</button>
+  </form>
+
+<h2>Accorder prêt (EJB GestionPrets)</h2>
+<form onsubmit="submitForm(event, '/api/pret')">
+    <label>Id Compte <input name="idCompte" type="number" required></label>
+    <label>Montant <input name="montant" type="number" step="0.01" required></label>
+    <label>Durée (mois) <input name="duree" type="number" required></label>
+    <label>Type prêt <input name="idTypePret" type="number" required></label>
+    <label>Status <input name="idTypeStatus" type="number" required></label>
+    <button type="submit">Accorder prêt</button>
+  </form>
+
+<h2>Remboursement (EJB GestionPrets)</h2>
+<form onsubmit="submitForm(event, '/api/remboursement')">
+    <label>Id Échéance prêt <input name="idEcheancePret" type="number" required></label>
+    <label>Montant <input name="montant" type="number" step="0.01" required></label>
+    <button type="submit">Rembourser</button>
+  </form>
+
+<h2>Appel ServiceCompte (.NET)</h2>
+<form onsubmit="submitForm(event, '/api/csharp-service', true)">
+    <label>Endpoint (ex: comptes/1/depot) <input name="endpoint" type="text" required></label>
+    <label>Payload JSON <input name="payload" type="text" placeholder='{"montant":100}'></label>
+    <button type="submit">Appeler</button>
+  </form>
+
+<h2>Résultat</h2>
+<pre id="result"></pre>
+
+</body>
+</html>
+
